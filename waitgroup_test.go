@@ -13,6 +13,7 @@ func TestWaitGroup(t *testing.T) {
 	t.Run("no context", func(t *testing.T) {
 		wg := New(1)
 		wg.Add(1)
+		assert.Equal(t, int32(2), wg.Count())
 		f := func() {
 			defer wg.Done()
 			time.Sleep(time.Millisecond)
@@ -37,7 +38,7 @@ func TestWaitGroup(t *testing.T) {
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		wg.Wait(WithContext(ctx))
-		assert.NoError(t, wg.Err())
+		assert.NoError(t, ctx.Err())
 	})
 
 	t.Run("WithContext timeout", func(t *testing.T) {
@@ -47,7 +48,6 @@ func TestWaitGroup(t *testing.T) {
 			defer wg.Done()
 			select {
 			case <-tctx.Done():
-				t.Log("stopping")
 				return
 			}
 		}
@@ -57,13 +57,13 @@ func TestWaitGroup(t *testing.T) {
 		actx, acancel := context.WithCancel(context.Background())
 		acancel()
 		wg.Wait(WithContext(actx))
-		assert.Error(t, wg.Err())
-		assert.ErrorIs(t, wg.Err(), context.Canceled)
+		assert.Error(t, actx.Err())
+		assert.ErrorIs(t, actx.Err(), context.Canceled)
 
 		bctx, bcancel := context.WithTimeout(context.Background(), time.Second)
 		defer bcancel()
 		stop()
 		wg.Wait(WithContext(bctx))
-		assert.NoError(t, wg.Err())
+		assert.NoError(t, bctx.Err())
 	})
 }

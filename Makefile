@@ -10,5 +10,10 @@ cover.html: test
 coverage: cover.html
 	open cover.html
 
+lint:
+	gofmt -w . 
+	golint 
+	go vet
+
 clean:
 	rm -v cover.out cover.html
