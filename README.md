@@ -1,4 +1,4 @@
-# go.foss.tools/sync/waigroup
+# go.foss.tools/sync/waitgroup
 
 A drop in replacement for sync.WaitGroup that provides a timeout option for Wait
 
