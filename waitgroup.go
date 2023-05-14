@@ -19,16 +19,18 @@ type (
 	}
 
 	waitgroup struct {
-		count *atomic.Int32
-		done  chan struct{}
+		finished *atomic.Bool
+		count    *atomic.Int32
+		done     chan struct{}
 	}
 )
 
 // New will initialize a waitgroup.
 func New(delta ...int32) Interface {
 	wg := &waitgroup{
-		count: new(atomic.Int32),
-		done:  make(chan struct{}),
+		finished: new(atomic.Bool),
+		count:    new(atomic.Int32),
+		done:     make(chan struct{}),
 	}
 
 	for _, c := range delta {
@@ -54,17 +56,20 @@ func (wg *waitgroup) Count() int32 {
 // If Done is called more times than our wait counter (see Add),
 // Done will panic as the waitgroup is expected to be finished.
 func (wg *waitgroup) Done() {
-	wg.count.Add(-1)
+	if wg.finished.Load() {
+		return
+	}
 
+	wg.count.Add(-1)
 	c := wg.count.Load()
+
 	switch {
 	case c > 0:
 		return
 	case c == 0:
 		close(wg.done)
+		wg.finished.Store(true)
 		return
-	default:
-		panic("Done() on a finished waitgroup")
 	}
 }
 

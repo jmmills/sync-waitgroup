@@ -23,7 +23,7 @@ func TestWaitGroup(t *testing.T) {
 		go f()
 		wg.Wait()
 
-		assert.Panics(t, wg.Done)
+		assert.NotPanics(t, wg.Done)
 	})
 
 	t.Run("WithContext no timeout", func(t *testing.T) {
